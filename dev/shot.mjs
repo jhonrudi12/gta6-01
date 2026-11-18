@@ -7,8 +7,8 @@ import { readFileSync, existsSync, statSync, mkdirSync, unlinkSync } from 'node:
 import { join, extname, resolve } from 'node:path';
 import puppeteer from '/home/hatch/workspace/makefun-threejs-fps-02/dev/node_modules/puppeteer/lib/cjs/puppeteer/puppeteer.js';
 
-const gameDir = resolve('/home/hatch/workspace/makefun-gta6-01/repo/game');
-const shotsDir = resolve('/home/hatch/workspace/makefun-gta6-01/repo/screenshots');
+const gameDir = resolve('/home/hatch/workspace/makefun-gta6-01-round2/repo/game');
+const shotsDir = resolve('/home/hatch/workspace/makefun-gta6-01-round2/repo/screenshots');
 mkdirSync(shotsDir, { recursive: true });
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg' };
