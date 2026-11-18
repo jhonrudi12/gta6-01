@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solmar City: Streets of the Sun</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1210;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #fff; }
+  #app { position: fixed; inset: 0; }
+  #app canvas { display: block; }
+
+  /* --- HUD --- */
+  .hud { position: fixed; z-index: 10; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  body.in-menu .hud, body.in-menu #hud-feed, body.in-menu #hud-hint { display: none !important; }
+  #hud-topleft { top: 14px; left: 16px; background: rgba(0,0,0,.35); padding: 6px 12px 8px; border-radius: 6px; }
+  #hud-money { font-size: 30px; font-weight: 800; color: #3aff7a; letter-spacing: 1px; }
+  #hud-objective { font-size: 17px; font-weight: 700; color: #ffe14d; margin-top: 2px; }
+  #hud-objtext { font-size: 13px; color: #eee; max-width: 380px; line-height: 1.35; margin-top: 2px; }
+  #hud-timer { font-size: 22px; font-weight: 800; margin-top: 4px; }
+  #hud-topright { top: 14px; right: 16px; text-align: right; }
+  #hud-stars { font-size: 30px; letter-spacing: 3px; }
+  #hud-wanted-label { font-size: 11px; letter-spacing: 2px; color: #ddd; }
+  #hud-bottomleft { bottom: 16px; left: 16px; width: 230px; }
+  #hud-hpbar { height: 16px; background: rgba(0,0,0,.55); border: 2px solid #fff; border-radius: 3px; overflow: hidden; }
+  #hud-hpfill { height: 100%; width: 100%; background: #3aa84f; }
+  #hud-hptext { font-size: 13px; font-weight: 700; margin-top: 3px; }
+  #hud-speed { font-size: 26px; font-weight: 800; margin-top: 6px; color: #fff; }
+  #hud-bottomright { bottom: 16px; right: 16px; text-align: right; }
+  #minimap { width: 200px; height: 200px; border: 2px solid rgba(255,255,255,.75); border-radius: 4px;
+    background: rgba(20,20,25,.7); }
+  #hud-maplabel { font-size: 11px; letter-spacing: 2px; color: #ddd; margin-top: 2px; }
+  #hud-feed { position: fixed; left: 16px; bottom: 110px; z-index: 10; pointer-events: none;
+    font-size: 14px; line-height: 1.5; text-shadow: 0 1px 3px rgba(0,0,0,.9); max-width: 420px; }
+  #hud-feed div { background: rgba(0,0,0,.45); padding: 2px 8px; margin-top: 3px; border-radius: 3px; display: inline-block; }
+  #hud-hint { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); z-index: 10;
+    font-size: 16px; font-weight: 700; background: rgba(0,0,0,.6); padding: 6px 14px; border-radius: 4px;
+    display: none; text-shadow: 0 1px 3px rgba(0,0,0,.9); }
+  #crosshair { position: fixed; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+    z-index: 10; display: none; pointer-events: none; }
+  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: #fff;
+    box-shadow: 0 0 3px #000; }
+  #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; }
+  #crosshair::after { top: 10px; left: 0; width: 22px; height: 2px; }
+  #hitmarker { position: fixed; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+    z-index: 11; display: none; pointer-events: none; border: 2px solid #ff4444; transform: rotate(45deg); }
+  #vignette { position: fixed; inset: 0; z-index: 9; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(200,0,0,.55) 100%);
+    transition: opacity .25s; }
+
+  /* --- Screens --- */
+  .screen { position: fixed; inset: 0; z-index: 20; display: none; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: linear-gradient(180deg, rgba(20,10,5,.55) 0%, rgba(20,10,5,.82) 100%); padding: 20px; }
+  .screen h1 { font-size: 52px; font-weight: 900; letter-spacing: 2px; color: #ffe14d;
+    text-shadow: 0 3px 0 #b3541e, 0 6px 18px rgba(0,0,0,.7); }
+  .screen h2 { font-size: 20px; font-weight: 400; color: #ffd9a0; margin-top: 4px; letter-spacing: 4px; }
+  .screen p { max-width: 620px; font-size: 16px; line-height: 1.55; color: #f2e8d8; margin-top: 16px; }
+  .controls { margin-top: 18px; font-size: 14px; line-height: 1.9; color: #ddd; background: rgba(0,0,0,.45);
+    padding: 12px 22px; border-radius: 8px; text-align: left; }
+  .controls b { color: #ffe14d; }
+  .btn { pointer-events: auto; cursor: pointer; margin-top: 22px; font-size: 20px; font-weight: 800;
+    letter-spacing: 1px; color: #1a1210; background: #ffe14d; border: none; border-radius: 6px;
+    padding: 13px 42px; box-shadow: 0 4px 0 #b3541e; }
+  .btn:hover { background: #fff0a0; }
+  .btn.secondary { background: #e8e8e8; box-shadow: 0 4px 0 #888; font-size: 16px; padding: 10px 28px; }
+  .screen h1.small { font-size: 44px; }
+  .save-note { margin-top: 10px; font-size: 13px; color: #bbb; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- HUD -->
+<div class="hud" id="hud-topleft">
+  <div id="hud-money">$0</div>
+  <div id="hud-objective">M1 — First Wheels</div>
+  <div id="hud-objtext">Steal any car and bring it to Lena's garage.</div>
+  <div id="hud-timer" style="display:none"></div>
+</div>
+<div class="hud" id="hud-topright">
+  <div id="hud-stars">☆☆☆☆☆</div>
+  <div id="hud-wanted-label">WANTED</div>
+</div>
+<div class="hud" id="hud-bottomleft">
+  <div id="hud-hpbar"><div id="hud-hpfill"></div></div>
+  <div id="hud-hptext">HP 100</div>
+  <div id="hud-speed"></div>
+</div>
+<div class="hud" id="hud-bottomright">
+  <canvas id="minimap" width="200" height="200"></canvas>
+  <div id="hud-maplabel">SOLMAR CITY</div>
+</div>
+<div id="hud-feed"></div>
+<div id="hud-hint"></div>
+<div id="crosshair"></div>
+<div id="hitmarker"></div>
+<div id="vignette"></div>
+
+<!-- Start screen -->
+<div class="screen" id="screen-start">
+  <h1>SOLMAR CITY</h1>
+  <h2>STREETS OF THE SUN</h2>
+  <p>Marco Solis is back in town — broke, wanted by nobody yet, and one favour away from
+  a fresh start. Lena Cruz has three jobs lined up: steal wheels, run a drop on the
+  bayfront, and settle things with the harbour crew. Take the city, one street at a time.</p>
+  <div class="controls">
+    <b>W A S D</b> — move &nbsp;·&nbsp; <b>Mouse drag</b> — look &nbsp;·&nbsp; <b>Shift</b> — run<br>
+    <b>Space</b> — jump &nbsp;·&nbsp; <b>E</b> — steal car &nbsp;·&nbsp; <b>F</b> — leave car<br>
+    <b>Click</b> — fire pistol &nbsp;·&nbsp; <b>1 / 2</b> — fists / pistol &nbsp;·&nbsp; <b>M</b> — mute &nbsp;·&nbsp; <b>Esc</b> — pause
+  </div>
+  <button class="btn" id="btn-start">START ENGINE</button>
+  <button class="btn secondary" id="btn-continue" style="display:none">CONTINUE</button>
+  <div class="save-note">Progress (money &amp; missions) saves automatically on this device.</div>
+</div>
+
+<!-- Pause screen -->
+<div class="screen" id="screen-pause">
+  <h1 class="small">PAUSED</h1>
+  <p>The sun waits for no one, Marco. Take a breath.</p>
+  <button class="btn" id="btn-resume">RESUME</button>
+  <button class="btn secondary" id="btn-restart">RESTART DAY</button>
+</div>
+
+<!-- Busted screen -->
+<div class="screen" id="screen-busted">
+  <h1 class="small">BUSTED</h1>
+  <p id="busted-text">The Solmar City patrols caught you.</p>
+  <button class="btn" id="btn-busted-ok">WAKE UP AT THE HOSPITAL</button>
+</div>
+
+<!-- Story complete screen -->
+<div class="screen" id="screen-complete">
+  <h1 class="small">STORY COMPLETE</h1>
+  <p id="complete-text">All three jobs done.</p>
+  <button class="btn" id="btn-complete-roam">FREE ROAM</button>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
